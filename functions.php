@@ -63,7 +63,7 @@ function best_shop_default_settings($setting_name){
         
         'header_layout' => 'woocommerce-bar',
         'hide_product_cat_search' => true,
-        'menu_layout' => 'default',
+        'menu_layout' => 'full_width',
         'header_banner_img' => '',
         
         'enable_sticky_menu' => false, 
@@ -990,5 +990,324 @@ function best_shop_scroll_options(){
 <?php }
     
 }
+
+
+
+/* 
+ * code to add cart, back to top popup 
+ */
+add_action('best_shop_header_content', 'best_shop_header_content');
+
+function best_shop_header_content(){
+
+    $best_shop_header_layout = best_shop_get_header_style();
+            
+    //if header layout is customizer or empty, get customizer setting
+    if ($best_shop_header_layout === 'customizer-setting' || $best_shop_header_layout === '' ) {
+        $best_shop_header_layout = best_shop_get_setting('header_layout');
+    }
+        
+    //if woocommerce not installed, set layout to default
+    if (!class_exists('WooCommerce') && $best_shop_header_layout === 'woocommerce-bar' ) {
+        $best_shop_header_layout = 'default';
+    }
+    
+    ?>
+    
+		<header id="masthead" class="site-header style-one 
+        <?php if ($best_shop_header_layout==='transparent-header') { 
+            echo esc_attr($best_shop_header_layout); 
+        } if($best_shop_header_layout==='woocommerce-bar'){
+            echo esc_attr(" header-no-border "); 
+        }
+        if ($best_shop_header_layout==='woocommerce-bar'){
+            echo esc_attr(' hide-menu-cart ');
+        }
+                                     
+        ?>"
+        itemscope itemtype="https://schema.org/WPHeader">
+            
+            <?php if(best_shop_get_setting('enable_top_bar')): ?>
+            
+            <div class="top-bar-menu">
+                <div class="container">
+                    
+                    <div class="left-menu">                        
+                    <?php
+                        
+                        if(best_shop_get_setting('top_bar_left_content') === 'menu') {
+                            
+                            wp_nav_menu( array( 'container_class' => 'top-bar-menu', 
+                                                'theme_location'  =>  'top-bar-left-menu', 
+                                                'depth' =>  1,
+                                            ) );
+                            
+                        } elseif(best_shop_get_setting('top_bar_left_content') === 'contacts'){
+                        ?><ul>
+                        <?php if (best_shop_get_setting('phone_number')!=''): ?>
+                        <li><?php echo esc_html(best_shop_get_setting('phone_title')).esc_html(best_shop_get_setting('phone_number')) ; ?></li>
+                        <?php endif; ?>  
+                        
+                        <?php if (best_shop_get_setting('address')!=''): ?>
+                        <li><?php echo esc_html(best_shop_get_setting('address_title')).esc_html(best_shop_get_setting('address')) ; ?></li>
+                        <?php endif; ?> 
+                        
+                        <?php if (best_shop_get_setting('mail_description')!=''): ?>
+                        <li><?php echo esc_html(best_shop_get_setting('mail_title')).esc_html(best_shop_get_setting('mail_description')) ; ?></li>
+                        <?php endif; ?>   
+                        
+                        </ul><?php
+                        } elseif(best_shop_get_setting('top_bar_left_content') === 'text')  {
+                            ?><ul><li><?php echo esc_html((best_shop_get_setting('top_bar_left_text')) ); ?></li></ul><?php    
+                        }
+
+
+                    ?>                      
+                    </div>
+                    
+                    <div class="right-menu">
+                    <?php
+                     if(best_shop_get_setting('top_bar_right_content') === 'menu') {
+                      wp_nav_menu( array( 'container_class' => 'top-bar-menu', 
+                                        'theme_location' =>  'top-bar-right-menu', 
+                                        'depth' =>  1,
+                                      ) );                         
+                     } elseif(best_shop_get_setting('top_bar_right_content') === 'social'){
+                         
+                         best_shop_social_links( true );
+                         
+                     } elseif(best_shop_get_setting('top_bar_right_content') === 'menu_social'){
+                         
+                       wp_nav_menu( array( 'container_class' => 'top-bar-menu', 
+                                        'theme_location' =>  'top-bar-right-menu', 
+                                        'depth' =>  1,
+                                      ) );
+                         
+                        best_shop_social_links( true );
+                         
+                     } 
+
+                    ?>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <?php endif; /* end top bar*/ ?> 
+                         
+			<div class=" <?php if(best_shop_get_setting('menu_layout') === 'default' ) { echo 'main-menu-wrap'; } else { echo 'burger-banner'; } ?> ">
+                <div class="container">
+				<div class="header-wrapper">
+					<?php 
+					/**
+					 * Site Branding 
+					*/
+					best_shop_site_branding();           
+					?>
+					<div class="nav-wrap">
+                        <?php if(best_shop_get_setting('menu_layout') === 'default' ) { ?>
+						<div class="header-left">
+							<?php 
+							/**
+							 * Primary navigation 
+							*/
+							best_shop_primary_navigation(); 
+							?>
+						</div>
+						<div class="header-right">
+							<?php
+							/**
+							 * Header Search 
+							*/ 
+							best_shop_header_search();
+							?>
+						</div>
+                        <?php } else { ?>
+                        <div class="banner header-right" style="width:100%; justify-content:space-around;">
+                          <?php the_widget( 'WP_Widget_Media_Image', 'url='.best_shop_get_setting('header_banner_img')); 
+
+                            if ( class_exists( 'WooCommerce' ) ) {
+
+                            ?><?php best_shop_product_search();?>
+                            <?php best_shop_cart_wishlist_myacc();?>
+                            <?php } ?>              
+
+                            </div>
+                            <?php } ?>
+
+                        </div>
+                        <!-- #site-navigation -->
+				</div>
+                </div>
+			</div>
+            
+            <?php
+            if(best_shop_get_setting('menu_layout') === 'full_width' ) {
+            ?>
+            
+            <!--Burger header-->
+            <div class="burger main-menu-wrap">
+            <div class="container">
+            <div class="header-wrapper">
+            <div class="nav-wrap">
+                <div class="header-left">
+                    <?php 
+                    /**
+                     * Primary navigation 
+                    */
+                    best_shop_primary_navigation(); 
+                    ?>
+                </div>
+                <div class="header-right">
+                    <?php
+                    /**
+                     * Header Search 
+                    */ 
+                    best_shop_header_search();
+                    ?>
+                </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            <!-- #site-navigation -->            
+            
+			<?php
+            }
+                
+			/**
+			 * Mobile navigation
+			 */
+			best_shop_mobile_navigation(); 
+			
+
+
+        if (class_exists('WooCommerce') && $best_shop_header_layout === 'woocommerce-bar' 
+            && best_shop_get_setting('menu_layout') != 'full_width' ) { 
+        ?>
+            <div class="woocommerce-bar">
+            <nav>
+            <div class="container"> 
+            <?php
+            best_shop_product_category_list();
+            
+            $best_shop_woo_ajax_search_code = trim((best_shop_get_setting('woo_ajax_search_code')));
+            if($best_shop_woo_ajax_search_code !== '') {
+                echo do_shortcode((wp_kses_post($best_shop_woo_ajax_search_code)));                
+            } else {
+                best_shop_product_search();
+            }
+                best_shop_cart_wishlist_myacc();    
+            ?>           
+            </div>
+            </nav> 
+            </div>
+        <?php 
+
+        }
+            
+        ?>
+            
+		</header><!-- #masthead -->
+        <?php
+
+
+}
+
+
+
+
+
+
+
+class WooCommerce_Ajax_Product_Search_Widget extends WP_Widget {
+
+    function __construct() {
+        parent::__construct(
+            'woocommerce_ajax_product_search_widget',
+            'WooCommerce AJAX Product Search',
+            array('description' => 'A WooCommerce AJAX product search widget')
+        );
+    }
+
+    public function widget($args, $instance) {
+        echo $args['before_widget'];
+        //echo $args['before_title'] . $instance['title'] . $args['after_title'];
+        ?>
+        <form id="ajax-product-search-form">
+            <input type="text" id="ajax-product-search-input" name="search" placeholder="Search products">
+            <input type="submit" value="Search">
+        </form>
+        <div id="ajax-product-search-results"></div>
+        <script>
+            // Include your JavaScript code here to handle AJAX functionality
+        </script>
+        <?php
+        echo $args['after_widget'];
+    }
+
+    public function form($instance) {
+        $title = isset($instance['title']) ? $instance['title'] : 'Search Products';
+        ?>
+        <p>
+            <label for="<?php echo $this->get_field_id('title'); ?>">Title:</label>
+            <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo esc_attr($title); ?>">
+        </p>
+        <?php
+    }
+
+    public function update($new_instance, $old_instance) {
+        $instance = array();
+        $instance['title'] = (!empty($new_instance['title'])) ? strip_tags($new_instance['title']) : '';
+        return $instance;
+    }
+}
+
+
+
+
+function enqueue_ajax_search_scripts() {
+    wp_enqueue_script('ajax-product-search', get_template_directory_uri() . '/js/ajax-product-search.js', array('jquery'), '', true);
+    wp_localize_script('ajax-product-search', 'ajax_product_params', array('ajax_url' => admin_url('admin-ajax.php')));
+}
+add_action('wp_enqueue_scripts', 'enqueue_ajax_search_scripts');
+
+
+
+function ajax_product_search() {
+    $search = $_POST['search'];
+
+    $args = array(
+        'post_type' => 'product',
+        'posts_per_page' => -1,
+        's' => $search,
+    );
+
+    $query = new WP_Query($args);
+
+    if ($query->have_posts()) :
+        while ($query->have_posts()) : $query->the_post();
+            wc_get_template_part('content', 'product');
+        endwhile;
+    else :
+        echo 'No products found';
+    endif;
+
+    wp_reset_postdata();
+
+    die();
+}
+add_action('wp_ajax_ajax_product_search', 'ajax_product_search');
+add_action('wp_ajax_nopriv_ajax_product_search', 'ajax_product_search');
+
+
+
+
+function register_ajax_product_search_widget() {
+    register_widget('WooCommerce_Ajax_Product_Search_Widget');
+}
+add_action('widgets_init', 'register_ajax_product_search_widget');
+
+
 
 
